@@ -1,10 +1,10 @@
 // this function takes the question object returned by the StackOverflow request
 // and returns new result to be appended to DOM
 var showQuestion = function(question) {
-	
+
 	// clone our result template code
 	var result = $('.templates .question').clone();
-	
+
 	// Set the question properties in result
 	var questionElem = result.find('.question-text a');
 	questionElem.attr('href', question.link);
@@ -50,13 +50,13 @@ var showError = function(error){
 // takes a string of semi-colon separated tags to be searched
 // for on StackOverflow
 var getUnanswered = function(tags) {
-	
+
 	// the parameters we need to pass in our request to StackOverflow's API
 	var request = { tagged: tags,
 					site: 'stackoverflow',
 					order: 'desc',
 					sort: 'creation'};
-	
+
 	$.ajax({
 		url: "http://api.stackexchange.com/2.2/questions/unanswered",
 		data: request,
@@ -80,6 +80,48 @@ var getUnanswered = function(tags) {
 		});
 };
 
+var taggedItems = function(tag){
+			var myRes = $('.templates .question').clone();
+
+
+			var info = myRes.find('.asked-date');
+			var count = "post count: " + tag.post_count;
+			info.text(count);
+			var person = myRes.find('.asker');
+			person.html('<p>Name:'+tag.user.display_name+
+									'</p>'+'<p>Reputation: '+tag.user.reputation + '</p>');
+			var views = myRes.find('.viewed');
+			views.text(tag.view_count);
+			return myRes;
+}
+
+
+var inspiration = function(sub){
+
+			var search = { tagged: sub,
+							site: 'stackoverflow',
+							order: 'desc',
+							sort: 'creation'
+						};
+
+		 var result = $.ajax({
+				url: "http://api.stackexchange.com/2.2/tags/"+sub+"/top-answerers/all_time",
+				data: search,
+				dataType: 'jsonp',
+				type:'GET',
+			})
+			.done(function(result){
+				var taggedResults = showSearchResults(search.tagged, result.items.length);
+
+			$('.search-results').html(taggedResults);
+
+			$.each(result.items, function(i, item){
+					var insp = taggedItems(item);
+					$('.search-results').append(insp);
+			});
+		})
+};
+
 
 $(document).ready( function() {
 	$('.unanswered-getter').submit( function(){
@@ -89,4 +131,10 @@ $(document).ready( function() {
 		var tags = $(this).find("input[name='tags']").val();
 		getUnanswered(tags);
 	});
+
+	$('.inspiration-getter').on('submit', function(){
+		$('.results').html("");
+		var thing = $(this).find("input[name='answerers']").val();
+		inspiration(thing);
+	})
 });
