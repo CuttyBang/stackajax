@@ -81,45 +81,50 @@ var getUnanswered = function(tags) {
 };
 
 var taggedItems = function(tag){
-			var myRes = $('.templates .question').clone();
+			
+			var myRes = $('.templates .answer').clone();
 
-
+			var rate = myRes.find('.question-text');
+			var accepted = "Accepted Answers: " + tag.user.accept_rate;
+			rate.text(accepted);
 			var info = myRes.find('.asked-date');
-			var count = "post count: " + tag.post_count;
+			var count = "Answered: " + tag.post_count;
 			info.text(count);
 			var person = myRes.find('.asker');
-			person.html('<p>Name:'+tag.user.display_name+
-									'</p>'+'<p>Reputation: '+tag.user.reputation + '</p>');
-			var views = myRes.find('.viewed');
-			views.text(tag.view_count);
+			person.html('<p>'+'<a target="_blank" '+'href=http://stackoverflow.com/users/'+tag.user.user_id+'>'+tag.user.display_name+'</a></p>'
+				+'<p>'+'<img src='+tag.user.profile_image+' width="32" height="32"></img>'+'</p>'+'<p>Reputation: '+tag.user.reputation + '</p>');
 			return myRes;
 }
 
 
 var inspiration = function(sub){
 
-			var search = { tagged: sub,
-							site: 'stackoverflow',
-							order: 'desc',
-							sort: 'creation'
-						};
+	var search = { tagged: sub,
+					site: 'stackoverflow',
+					order: 'desc',
+					sort: 'creation'
+				};
 
-		 var result = $.ajax({
-				url: "http://api.stackexchange.com/2.2/tags/"+sub+"/top-answerers/all_time",
-				data: search,
-				dataType: 'jsonp',
-				type:'GET',
-			})
-			.done(function(result){
-				var taggedResults = showSearchResults(search.tagged, result.items.length);
-
-			$('.search-results').html(taggedResults);
-
-			$.each(result.items, function(i, item){
-					var insp = taggedItems(item);
-					$('.search-results').append(insp);
-			});
+	 var result = $.ajax({
+			url: "http://api.stackexchange.com/2.2/tags/"+sub+"/top-answerers/all_time",
+			data: search,
+			dataType: 'jsonp',
+			type:'GET'
 		})
+		.done(function(result){
+			var taggedResults = showSearchResults(search.tagged, result.items.length);
+
+		$('.search-results').html(taggedResults);
+
+		$.each(result.items, function(i, item){
+				var insp = taggedItems(item);
+				$('.search-results').append(insp);
+		});
+	})
+	.fail(function(jqXHR, error){ 
+		var errorElem = showError(error);
+		$('.search-results').append(errorElem);
+	});
 };
 
 
